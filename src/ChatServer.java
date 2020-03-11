@@ -1,7 +1,9 @@
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -10,7 +12,8 @@ public class ChatServer {
     private static ServerSocket servSock;
     private static final int port = 7080;
     //benytter Vector i stedet for ArrayList, da den er "thread-safe"
-    private Vector<Socket> clientList = new Vector<>();
+    private static Hashtable outputStreams = new Hashtable();
+    private static Vector<Socket> clientList = new Vector<>();
     private static final int max = 5;
 
     public static void main(String[] args) {
@@ -29,7 +32,6 @@ public class ChatServer {
             System.out.println("Unable to find port");
             System.exit(1);
         }
-        ChatServer chat = new ChatServer();
         while (true) {
             try {
                 /*
@@ -39,9 +41,13 @@ public class ChatServer {
                  serversocket, som tilføjes til en ServerThread-tråd.
                  */
                 socket = servSock.accept();
-                chat.clientList.add(socket);
+                clientList.add(socket);
                 System.out.println("Found connection");
+                //DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                //outputStreams.put(socket, out);
+                //Runnable r = new ServerThread(socket, out);
                 Runnable r = new ServerThread(socket);
+
                 pool.execute(r);
                 //TODO: shutdown og slet indhold af tråden når den er idle
 
@@ -52,28 +58,35 @@ public class ChatServer {
         }
     }
 
-    public void addToList(Client client) {
 
+    Enumeration getOutputStreams() {
+        return outputStreams.elements();
     }
 
-    public Vector<Socket> getClientList() {
-        return clientList;
-    }
 
-    public void setClientList(Vector<Socket> clientList) {
-        this.clientList = clientList;
-    }
-
-    //TODO: send besked fra en client-socket til alle sockets
     public void sendToAll(String message) {
-    for (Socket s : clientList) {
-        try {
-            PrintWriter output = new PrintWriter(s.getOutputStream());
-            output.println(message);
+        for (Enumeration e = getOutputStreams(); e.hasMoreElements();) {
+            DataOutputStream out = (DataOutputStream) e.nextElement();
 
-        } catch (IOException e) {
-            System.out.println("Error: " + e);
-            e.printStackTrace();
+            try {
+                out.writeUTF(message);
+
+            } catch (IOException ex) {
+                System.out.println("Error");
+            }
+        }
+
+    }
+
+    public void sendToAllEasymode(String message) {
+        for (Socket socket : clientList) {
+            try {
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                out.writeUTF(message);
+
+            } catch (IOException ex) {
+                System.out.println("Error");
+                ex.printStackTrace();
             }
         }
     }
