@@ -1,8 +1,10 @@
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
+import java.sql.SQLOutput;
 
-public class MessageReader extends Thread {
+public class MessageReader implements Runnable {
 
     private DataInputStream in;
     private Socket socket;
@@ -21,10 +23,16 @@ public class MessageReader extends Thread {
     }
 
     public void run() {
-        while (true) {
+        boolean reading = true;
+        while (reading) {
             try {
-                String response = in.readUTF();
-                System.out.println("\n" + response);
+                try {
+                    String response = in.readUTF();
+                    System.out.println("\n" + response);
+                } catch (SocketException se) {
+                    System.out.println("User closed connection");
+                    reading = false;
+                }
             } catch (IOException ex) {
                 System.out.println("Error");
                 ex.printStackTrace();
@@ -32,3 +40,4 @@ public class MessageReader extends Thread {
         }
     }
 }
+

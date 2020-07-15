@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class MessageWriter extends Thread {
+public class MessageWriter implements Runnable {
 
     private DataOutputStream out;
     private Socket socket;

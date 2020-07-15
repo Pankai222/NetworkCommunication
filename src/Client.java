@@ -3,7 +3,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class Client extends Thread {
+public class Client {
 
     private String userName;
     private InetAddress ipAddress;
@@ -24,8 +24,10 @@ public class Client extends Thread {
         try {
             Socket socket = new Socket(ipAddress, port);
             System.out.println("Connection established - Welcome to the Chat Room");
-            new MessageReader(socket, this).start();
-            new MessageWriter(socket, this).start();
+            Thread t1 = new Thread(new MessageReader(socket, this));
+            Thread t2 = new Thread(new MessageWriter(socket, this));
+            t1.start();
+            t2.start();
 
         } catch (IOException io) {
             io.printStackTrace();

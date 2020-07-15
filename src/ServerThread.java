@@ -1,7 +1,9 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ServerThread implements Runnable {
 
@@ -24,20 +26,15 @@ public class ServerThread implements Runnable {
         public void run() {
             ChatServer serv = new ChatServer();
             try {
-                //Scanner clientInput = new Scanner(socket.getInputStream());
                 DataInputStream in = new DataInputStream(socket.getInputStream());
-                //PrintWriter serverOutput = new PrintWriter(socket.getOutputStream(), true);
                 data = new DataOutputStream(socket.getOutputStream());
-            /*
-            benytter while-loop til at scanne efter input fra client og sende tilbage i form af
-            serverOutput. Kører indtil client skriver QUIT.
-            */
                 while (true) {
-                    String msg = in.readUTF();
-                    System.out.println("Message received");
-                    //serv.sendToAll("Message - " + msg);
-                    serv.sendToAllEasymode(msg);
+                        String msg = in.readUTF();
+                        System.out.println("Message received");
+                        serv.broadcast(msg);
                 }
+            } catch (EOFException eof) {
+                //
             } catch (IOException io) {
                 System.out.println("Error");
                 io.printStackTrace();
